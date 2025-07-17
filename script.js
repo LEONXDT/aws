@@ -42,15 +42,15 @@ function createTextParticles(text) {
   const tempCtx = tempCanvas.getContext("2d");
   tempCanvas.width = canvas.width;
   tempCanvas.height = canvas.height;
-  tempCtx.font = "80px Arial";
+  tempCtx.font = "140px Arial";
   tempCtx.fillStyle = "white";
   tempCtx.textAlign = "center";
   tempCtx.fillText(text, centerX, centerY);
   const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
 
   let targetPoints = [];
-  for (let y = 0; y < canvas.height; y += 8) {
-    for (let x = 0; x < canvas.width; x += 8) {
+  for (let y = 0; y < canvas.height; y += 12) {
+    for (let x = 0; x < canvas.width; x += 12) {
       const i = (y * canvas.width + x) * 4;
       if (imageData.data[i + 3] > 128) {
         targetPoints.push({ x, y });
@@ -69,7 +69,7 @@ function createTextParticles(text) {
 
 function createHeartShape() {
   const heartPoints = [];
-  const scale = 12;
+  const scale = 20;
   for (let t = 0; t < Math.PI * 2; t += 0.05) {
     const x = 16 * Math.pow(Math.sin(t), 3);
     const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
@@ -82,41 +82,4 @@ function createHeartShape() {
   particles = heartPoints.map(p => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    targetX: p.x,
-    targetY: p.y,
-    color: "pink"
-  }));
-}
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBackground();
-
-  for (let p of particles) {
-    p.x += (p.targetX - p.x) * 0.1;
-    p.y += (p.targetY - p.y) * 0.1;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  requestAnimationFrame(animate);
-}
-
-function showMessagesSequentially() {
-  if (currentMsgIndex < messages.length) {
-    createTextParticles(messages[currentMsgIndex]);
-    currentMsgIndex++;
-    setTimeout(showMessagesSequentially, delayBetweenTexts);
-  } else {
-    setTimeout(() => {
-      createHeartShape();
-    }, delayBetweenTexts);
-  }
-}
-
-createTextParticles(messages[0]);
-animate();
-showMessagesSequentially();
-setInterval(drawBackground, 33);
+    targetX
