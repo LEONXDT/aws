@@ -4,8 +4,8 @@ const messageEl = document.getElementById("message");
 let count = 3;
 const messages = [
   "🎉 Happy Birthday! 🎉",
-  "To: Linh Linh 💖",
-  "You are now 25!",
+  "alaa💖",
+  "You are now 26!",
   "",
 `     ***   ***
    *************
