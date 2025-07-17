@@ -42,15 +42,18 @@ function createTextParticles(text) {
   const tempCtx = tempCanvas.getContext("2d");
   tempCanvas.width = canvas.width;
   tempCanvas.height = canvas.height;
-  tempCtx.font = "140px Arial"; // حجم الخط صار أكبر
+
+  tempCtx.font = "bold 160px Arial"; // خط كبير وواضح
   tempCtx.fillStyle = "white";
   tempCtx.textAlign = "center";
+  tempCtx.textBaseline = "middle";
   tempCtx.fillText(text, centerX, centerY);
+
   const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
 
   let targetPoints = [];
-  for (let y = 0; y < canvas.height; y += 12) {
-    for (let x = 0; x < canvas.width; x += 12) {
+  for (let y = 0; y < canvas.height; y += 4) {  // نقاط دقيقة
+    for (let x = 0; x < canvas.width; x += 4) {
       const i = (y * canvas.width + x) * 4;
       if (imageData.data[i + 3] > 128) {
         targetPoints.push({ x, y });
@@ -69,8 +72,7 @@ function createTextParticles(text) {
 
 function createHeartShape() {
   const heartPoints = [];
-  const scale = 20; // كبرنا حجم القلب
-
+  const scale = 20;
   for (let t = 0; t < Math.PI * 2; t += 0.05) {
     const x = 16 * Math.pow(Math.sin(t), 3);
     const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
@@ -98,7 +100,7 @@ function animate() {
     p.y += (p.targetY - p.y) * 0.1;
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); // حجم النقطة صار أكبر
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);  // نقاط صغيرة وواضحة
     ctx.fill();
   }
 
