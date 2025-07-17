@@ -14,7 +14,7 @@ const messages = [
   "alaa",
   "1999-27-8",
   "26",
-  "Wishing you joy and love"
+  "Just like the moon, the older you get, the more beautiful you become."
 ];
 
 let particles = [];
