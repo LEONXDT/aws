@@ -86,7 +86,7 @@ function drawParticles(text, callback) {
       p.draw();
     });
     frame++;
-    if (frame < 100) {
+    if (frame < 500) {
       requestAnimationFrame(animateParticles);
     } else {
       if (callback) callback();
@@ -116,7 +116,7 @@ function drawHeartFromParticles(callback) {
       p.draw();
     });
     frame++;
-    if (frame < 100) {
+    if (frame < 500) {
       requestAnimationFrame(animateHeart);
     } else {
       drawParticles("Wishing you joy and love!", () => {});
