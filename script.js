@@ -3,123 +3,141 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
-const fontSize = 12;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
-
-const messages = [
-  "Happy Birthday",
-  "alaa",
-  "1999-27-8",
-  "26",
-  "Just like the moon, the older you get, the more beautiful you become."
-];
-
 let particles = [];
-let currentMsgIndex = 0;
-const delayBetweenTexts = 3000;
+let messages = ["Happy Birthday", "alaa", "1999-27-8", "Age: 26"];
+let finalMessage = "Just like the moon, the older you get, the more beautiful you become.";
+let currentMessageIndex = 0;
+let currentShape = [];
+let showingHeart = false;
+let messageDone = false;
 
-function drawBackground() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#b84eff";
-  ctx.font = fontSize + "px monospace";
-
-  for (let i = 0; i < drops.length; i++) {
-    const text = String.fromCharCode(0x30A0 + Math.random() * 96);
-    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-      drops[i] = 0;
+function createTextShape(text, fontSize = 60) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `bold ${fontSize}px Arial`;
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let shape = [];
+  for (let y = 0; y < canvas.height; y += 8) {
+    for (let x = 0; x < canvas.width; x += 8) {
+      let index = (y * canvas.width + x) * 4;
+      if (imageData[index + 3] > 128) {
+        shape.push({ x, y });
+      }
     }
+  }
+  return shape;
+}
+
+function createHeartShape() {
+  let points = [];
+  let steps = 90;
+  for (let i = 0; i < steps; i++) {
+    let angle = (Math.PI * 2 * i) / steps;
+    let x = 16 * Math.pow(Math.sin(angle), 3);
+    let y = -(
+      13 * Math.cos(angle) -
+      5 * Math.cos(2 * angle) -
+      2 * Math.cos(3 * angle) -
+      Math.cos(4 * angle)
+    );
+    let posX = canvas.width / 2 + x * 15;
+    let posY = canvas.height / 2 + y * 15;
+
+    // نقطتين بكل خطوة
+    points.push({ x: posX, y: posY });
+    points.push({ x: posX + 2, y: posY + 2 });
+  }
+  return points;
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // خلفية Matrix
+  drawMatrixBackground();
+
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    if (p.target) {
+      let dx = p.target.x - p.x;
+      let dy = p.target.y - p.y;
+      p.x += dx * 0.1;
+      p.y += dy * 0.1;
+    }
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffc0cb"; // pink
+    ctx.fill();
+  }
+
+  // آخر خطوة: نرسم الجملة داخل القلب
+  if (messageDone && showingHeart) {
+    drawTextInsideHeart(finalMessage);
+  }
+
+  requestAnimationFrame(drawParticles);
+}
+
+function drawTextInsideHeart(text) {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#ffc0cb";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    text,
+    canvas.width / 2,
+    canvas.height / 2 + 10
+  );
+}
+
+function updateMessage() {
+  if (currentMessageIndex < messages.length) {
+    currentShape = createTextShape(messages[currentMessageIndex]);
+    assignParticles(currentShape);
+    currentMessageIndex++;
+    setTimeout(updateMessage, 3000);
+  } else {
+    setTimeout(() => {
+      // شكل القلب
+      currentShape = createHeartShape();
+      assignParticles(currentShape);
+      showingHeart = true;
+      messageDone = true;
+    }, 3000);
+  }
+}
+
+function assignParticles(shape) {
+  while (particles.length < shape.length) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+    });
+  }
+
+  for (let i = 0; i < shape.length; i++) {
+    particles[i].target = shape[i];
+  }
+}
+
+// خلفية Matrix
+let matrixLetters = "アァイィウヴエェオカキクケコサシスセソタチツテトナニヌネノハヒフヘホ";
+matrixLetters = matrixLetters.split("");
+let drops = Array(Math.floor(canvas.width / 20)).fill(1);
+
+function drawMatrixBackground() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#9932cc"; // purple
+  ctx.font = "14px monospace";
+  for (let i = 0; i < drops.length; i++) {
+    let text = matrixLetters[Math.floor(Math.random() * matrixLetters.length)];
+    ctx.fillText(text, i * 20, drops[i] * 20);
+    if (drops[i] * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
     drops[i]++;
   }
 }
 
-function createTextParticles(text) {
-  const tempCanvas = document.createElement("canvas");
-  const tempCtx = tempCanvas.getContext("2d");
-  tempCanvas.width = canvas.width;
-  tempCanvas.height = canvas.height;
-
-  tempCtx.font = "bold 160px Arial"; // خط كبير وواضح
-  tempCtx.fillStyle = "white";
-  tempCtx.textAlign = "center";
-  tempCtx.textBaseline = "middle";
-  tempCtx.fillText(text, centerX, centerY);
-
-  const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
-
-  let targetPoints = [];
-  for (let y = 0; y < canvas.height; y += 4) {  // نقاط دقيقة
-    for (let x = 0; x < canvas.width; x += 4) {
-      const i = (y * canvas.width + x) * 4;
-      if (imageData.data[i + 3] > 128) {
-        targetPoints.push({ x, y });
-      }
-    }
-  }
-
-  particles = targetPoints.map(p => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    targetX: p.x,
-    targetY: p.y,
-    color: "pink"
-  }));
-}
-
-function createHeartShape() {
-  const heartPoints = [];
-  const scale = 20;
-  for (let t = 0; t < Math.PI * 2; t += 0.05) {
-    const x = 16 * Math.pow(Math.sin(t), 3);
-    const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-    heartPoints.push({
-      x: canvas.width / 2 + x * scale,
-      y: canvas.height / 2 - y * scale,
-    });
-  }
-
-  particles = heartPoints.map(p => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    targetX: p.x,
-    targetY: p.y,
-    color: "pink"
-  }));
-}
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBackground();
-
-  for (let p of particles) {
-    p.x += (p.targetX - p.x) * 0.1;
-    p.y += (p.targetY - p.y) * 0.1;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);  // نقاط صغيرة وواضحة
-    ctx.fill();
-  }
-
-  requestAnimationFrame(animate);
-}
-
-function showMessagesSequentially() {
-  if (currentMsgIndex < messages.length) {
-    createTextParticles(messages[currentMsgIndex]);
-    currentMsgIndex++;
-    setTimeout(showMessagesSequentially, delayBetweenTexts);
-  } else {
-    setTimeout(() => {
-      createHeartShape();
-    }, delayBetweenTexts);
-  }
-}
-
-createTextParticles(messages[0]);
-animate();
-showMessagesSequentially();
-setInterval(drawBackground, 33);
+updateMessage();
+drawParticles();
