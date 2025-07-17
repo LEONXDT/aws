@@ -8,7 +8,6 @@ let particles = [];
 let messages = ["Happy Birthday", "alaa", "1999-27-8", "Age: 26"];
 let finalMessage = "Just like the moon, the older you get, the more beautiful you become.";
 let currentMessageIndex = 0;
-let currentShape = [];
 let showingHeart = false;
 let messageDone = false;
 
@@ -18,11 +17,13 @@ function createTextShape(text, fontSize = 100) {
   ctx.fillStyle = "white";
   ctx.textAlign = "center";
   ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-  let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-  let shape = [];
-  for (let y = 0; y < canvas.height; y += 8) {
-    for (let x = 0; x < canvas.width; x += 8) {
-      let index = (y * canvas.width + x) * 4;
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const shape = [];
+
+  for (let y = 0; y < canvas.height; y += 6) {
+    for (let x = 0; x < canvas.width; x += 6) {
+      const index = (y * canvas.width + x) * 4;
       if (imageData[index + 3] > 128) {
         shape.push({ x, y });
       }
@@ -32,21 +33,19 @@ function createTextShape(text, fontSize = 100) {
 }
 
 function createHeartShape() {
-  let points = [];
-  let steps = 90;
+  const points = [];
+  const steps = 120;
   for (let i = 0; i < steps; i++) {
-    let angle = (Math.PI * 2 * i) / steps;
-    let x = 16 * Math.pow(Math.sin(angle), 3);
-    let y = -(
+    const angle = (Math.PI * 2 * i) / steps;
+    const x = 16 * Math.pow(Math.sin(angle), 3);
+    const y = -(
       13 * Math.cos(angle) -
       5 * Math.cos(2 * angle) -
       2 * Math.cos(3 * angle) -
       Math.cos(4 * angle)
     );
-    let posX = canvas.width / 2 + x * 15;
-    let posY = canvas.height / 2 + y * 15;
-
-    // نقطتين لكل نقطة أساسية
+    const posX = canvas.width / 2 + x * 15;
+    const posY = canvas.height / 2 + y * 15;
     points.push({ x: posX, y: posY });
     points.push({ x: posX + 2, y: posY + 2 });
   }
@@ -57,20 +56,20 @@ function drawParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   for (let i = 0; i < particles.length; i++) {
-    let p = particles[i];
+    const p = particles[i];
     if (p.target) {
-      let dx = p.target.x - p.x;
-      let dy = p.target.y - p.y;
-      p.x += dx * 0.1;
-      p.y += dy * 0.1;
+      const dx = p.target.x - p.x;
+      const dy = p.target.y - p.y;
+      p.x += dx * 0.08;
+      p.y += dy * 0.08;
     }
     ctx.beginPath();
     ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-    ctx.fillStyle = "#ff69b4"; // وردي
+    ctx.fillStyle = "#ff69b4";
     ctx.fill();
   }
 
-  if (messageDone && showingHeart) {
+  if (showingHeart && messageDone) {
     drawTextInsideHeart(finalMessage);
   }
 
@@ -86,14 +85,14 @@ function drawTextInsideHeart(text) {
 
 function updateMessage() {
   if (currentMessageIndex < messages.length) {
-    currentShape = createTextShape(messages[currentMessageIndex]);
-    assignParticles(currentShape);
+    const shape = createTextShape(messages[currentMessageIndex]);
+    assignParticles(shape);
     currentMessageIndex++;
     setTimeout(updateMessage, 3000);
   } else {
     setTimeout(() => {
-      currentShape = createHeartShape();
-      assignParticles(currentShape);
+      const heart = createHeartShape();
+      assignParticles(heart);
       showingHeart = true;
       messageDone = true;
     }, 3000);
@@ -105,9 +104,10 @@ function assignParticles(shape) {
     particles.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
+      target: null,
     });
   }
-
+  particles = particles.slice(0, shape.length);
   for (let i = 0; i < shape.length; i++) {
     particles[i].target = shape[i];
   }
