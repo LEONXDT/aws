@@ -6,8 +6,9 @@ canvas.height = window.innerHeight;
 
 let particles = [];
 let messageIndex = 0;
+let heartMode = false;
 
-// الرسائل بترتيبك
+// الرسائل
 const messages = [
   "Happy Birthday",
   "alaa",
@@ -23,7 +24,7 @@ class Particle {
     this.tx = tx;
     this.ty = ty;
     this.size = 2;
-    this.color = "#ff69b4"; // اللون الوردي
+    this.color = "#ff69b4";
   }
 
   update() {
@@ -37,7 +38,7 @@ class Particle {
   }
 }
 
-// رسم الخلفية المتحركة مثل الماتريكس
+// خلفية متحركة
 const matrixChars = "HAPPYBIRTHDAYALAAYOUARETHELIGHT1999278";
 const fontSize = 16;
 const columns = canvas.width / fontSize;
@@ -62,7 +63,6 @@ function drawMatrixBackground() {
   }
 }
 
-// تحويل نص إلى نقاط
 function textToParticles(message) {
   particles = [];
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -83,22 +83,37 @@ function textToParticles(message) {
   }
 }
 
+// قلب من نقاط
+function drawHeartParticles() {
+  particles = [];
+  const scale = 10;
+  const offsetX = canvas.width / 2;
+  const offsetY = canvas.height / 2;
+
+  for (let t = 0; t < Math.PI * 2; t += 0.05) {
+    const x = scale * 16 * Math.pow(Math.sin(t), 3);
+    const y = -scale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+    particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, x + offsetX, y + offsetY));
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
-  drawMatrixBackground();
-
+  drawMatrixBackground(); // ترسم أول
   particles.forEach(p => {
     p.update();
     p.draw();
   });
 }
 
-// تغيير النص كل فترة
 function showNextMessage() {
   if (messageIndex < messages.length) {
     textToParticles(messages[messageIndex]);
     messageIndex++;
     setTimeout(showNextMessage, 4000);
+  } else {
+    heartMode = true;
+    drawHeartParticles();
   }
 }
 
