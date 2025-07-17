@@ -1,77 +1,71 @@
-const countdownEl = document.getElementById("countdown");
-const messageEl = document.getElementById("message");
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-let count = 3;
-const messages = [
-  "🎉 Happy Birthday! 🎉",
-  "alaa💖",
-  "You are now 26!",
-  "",
-`     ***   ***
-   *************
-  ***************
-  ***************
-   *************
-    ***********
-     *********
-       *****
-        ***
-         * `,
-  "All good things come to you 💫"
+let textIndex = 0;
+const texts = [
+  "8.27.1999",
+  "Happy 26",
+  "alaa",
+  "All good things come to you",
+  "Happy Birthday"
 ];
 
-function startCountdown() {
-  const timer = setInterval(() => {
-    countdownEl.innerText = count;
-    count--;
-    if (count < 0) {
-      clearInterval(timer);
-      countdownEl.style.opacity = 0;
-      showMessages(0);
-    }
-  }, 1000);
-}
+const particles = [];
+const density = 5;
 
-function showMessages(index) {
-  if (index >= messages.length) return;
-  messageEl.style.display = "block";
-  messageEl.innerText = messages[index];
-  setTimeout(() => {
-    showMessages(index + 1);
-  }, 2500);
-}
+function createParticlesFromText(text) {
+  particles.length = 0;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 80px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
-function startMatrix() {
-  const canvas = document.createElement("canvas");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  document.getElementById("matrix").appendChild(canvas);
-  const ctx = canvas.getContext("2d");
-
-  const letters = "HAPPYBIRTHDAY".split("");
-  const fontSize = 14;
-  const columns = canvas.width / fontSize;
-  const drops = Array(Math.floor(columns)).fill(1);
-
-  function draw() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#a020f0";
-    ctx.font = fontSize + "px monospace";
-    for (let i = 0; i < drops.length; i++) {
-      const text = letters[Math.floor(Math.random() * letters.length)];
-      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-        drops[i] = 0;
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < imageData.height; y += density) {
+    for (let x = 0; x < imageData.width; x += density) {
+      const index = (y * imageData.width + x) * 4;
+      if (imageData.data[index + 3] > 128) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          tx: x,
+          ty: y,
+          vx: 0,
+          vy: 0
+        });
       }
-      drops[i]++;
     }
   }
-
-  setInterval(draw, 33);
 }
 
-startMatrix();
-startCountdown();
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let p of particles) {
+    let dx = p.tx - p.x;
+    let dy = p.ty - p.y;
+    p.vx += dx * 0.01;
+    p.vy += dy * 0.01;
+    p.vx *= 0.9;
+    p.vy *= 0.9;
+    p.x += p.vx;
+    p.y += p.vy;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  requestAnimationFrame(animateParticles);
+}
+
+function showNextText() {
+  createParticlesFromText(texts[textIndex]);
+  textIndex = (textIndex + 1) % texts.length;
+}
+
+showNextText();
+animateParticles();
+setInterval(showNextText, 4000);
