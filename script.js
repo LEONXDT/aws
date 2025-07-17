@@ -42,7 +42,7 @@ function createTextParticles(text) {
   const tempCtx = tempCanvas.getContext("2d");
   tempCanvas.width = canvas.width;
   tempCanvas.height = canvas.height;
-  tempCtx.font = "140px Arial";
+  tempCtx.font = "140px Arial"; // حجم الخط صار أكبر
   tempCtx.fillStyle = "white";
   tempCtx.textAlign = "center";
   tempCtx.fillText(text, centerX, centerY);
@@ -69,7 +69,8 @@ function createTextParticles(text) {
 
 function createHeartShape() {
   const heartPoints = [];
-  const scale = 20;
+  const scale = 20; // كبرنا حجم القلب
+
   for (let t = 0; t < Math.PI * 2; t += 0.05) {
     const x = 16 * Math.pow(Math.sin(t), 3);
     const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
@@ -82,4 +83,41 @@ function createHeartShape() {
   particles = heartPoints.map(p => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    targetX
+    targetX: p.x,
+    targetY: p.y,
+    color: "pink"
+  }));
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
+
+  for (let p of particles) {
+    p.x += (p.targetX - p.x) * 0.1;
+    p.y += (p.targetY - p.y) * 0.1;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); // حجم النقطة صار أكبر
+    ctx.fill();
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function showMessagesSequentially() {
+  if (currentMsgIndex < messages.length) {
+    createTextParticles(messages[currentMsgIndex]);
+    currentMsgIndex++;
+    setTimeout(showMessagesSequentially, delayBetweenTexts);
+  } else {
+    setTimeout(() => {
+      createHeartShape();
+    }, delayBetweenTexts);
+  }
+}
+
+createTextParticles(messages[0]);
+animate();
+showMessagesSequentially();
+setInterval(drawBackground, 33);
