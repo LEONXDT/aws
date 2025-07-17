@@ -14,13 +14,11 @@ const messages = [
   "alaa",
   "1999-27-8",
   "26",
-  "Wishing you joy and love",
-  "<3"
+  "Wishing you joy and love"
 ];
 
 let particles = [];
 let currentMsgIndex = 0;
-let frame = 0;
 const delayBetweenTexts = 3000;
 
 function drawBackground() {
@@ -32,7 +30,6 @@ function drawBackground() {
   for (let i = 0; i < drops.length; i++) {
     const text = String.fromCharCode(0x30A0 + Math.random() * 96);
     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
     if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
       drops[i] = 0;
     }
@@ -61,20 +58,13 @@ function createTextParticles(text) {
     }
   }
 
-  while (particles.length < targetPoints.length) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      targetX: 0,
-      targetY: 0,
-      color: "pink"
-    });
-  }
-
-  for (let i = 0; i < targetPoints.length; i++) {
-    particles[i].targetX = targetPoints[i].x;
-    particles[i].targetY = targetPoints[i].y;
-  }
+  particles = targetPoints.map(p => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    targetX: p.x,
+    targetY: p.y,
+    color: "pink"
+  }));
 }
 
 function createHeartShape() {
@@ -89,20 +79,13 @@ function createHeartShape() {
     });
   }
 
-  while (particles.length < heartPoints.length) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      targetX: 0,
-      targetY: 0,
-      color: "pink"
-    });
-  }
-
-  for (let i = 0; i < heartPoints.length; i++) {
-    particles[i].targetX = heartPoints[i].x;
-    particles[i].targetY = heartPoints[i].y;
-  }
+  particles = heartPoints.map(p => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    targetX: p.x,
+    targetY: p.y,
+    color: "pink"
+  }));
 }
 
 function animate() {
@@ -114,7 +97,7 @@ function animate() {
     p.y += (p.targetY - p.y) * 0.1;
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -133,6 +116,7 @@ function showMessagesSequentially() {
   }
 }
 
+createTextParticles(messages[0]);
 animate();
 showMessagesSequentially();
 setInterval(drawBackground, 33);
