@@ -13,19 +13,20 @@ const messages = [
   "Happy Birthday",
   "alaa",
   "1999-27-8",
-  "Wishing you joy and love",
   "26",
+  "Wishing you joy and love",
   "<3"
 ];
 
 let particles = [];
 let currentMsgIndex = 0;
 let frame = 0;
+const delayBetweenTexts = 3000;
 
 function drawBackground() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#b84eff"; // لون الخلفية المتحركة (بنفسجي)
+  ctx.fillStyle = "#b84eff";
   ctx.font = fontSize + "px monospace";
 
   for (let i = 0; i < drops.length; i++) {
@@ -40,57 +41,98 @@ function drawBackground() {
 }
 
 function createTextParticles(text) {
-  particles = [];
-  ctx.font = "40px Arial";
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.fillText(text, centerX, centerY);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const tempCanvas = document.createElement("canvas");
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+  tempCtx.font = "80px Arial";
+  tempCtx.fillStyle = "white";
+  tempCtx.textAlign = "center";
+  tempCtx.fillText(text, centerX, centerY);
+  const imageData = tempCtx.getImageData(0, 0, canvas.width, canvas.height);
 
-  for (let y = 0; y < canvas.height; y += 6) {
-    for (let x = 0; x < canvas.width; x += 6) {
-      const index = (y * canvas.width + x) * 4;
-      if (imageData.data[index + 3] > 128) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          targetX: x,
-          targetY: y,
-          color: "pink" // لون النقاط اللي تكون النص
-        });
+  let targetPoints = [];
+  for (let y = 0; y < canvas.height; y += 8) {
+    for (let x = 0; x < canvas.width; x += 8) {
+      const i = (y * canvas.width + x) * 4;
+      if (imageData.data[i + 3] > 128) {
+        targetPoints.push({ x, y });
       }
     }
   }
+
+  while (particles.length < targetPoints.length) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      targetX: 0,
+      targetY: 0,
+      color: "pink"
+    });
+  }
+
+  for (let i = 0; i < targetPoints.length; i++) {
+    particles[i].targetX = targetPoints[i].x;
+    particles[i].targetY = targetPoints[i].y;
+  }
 }
 
-function animateParticles() {
+function createHeartShape() {
+  const heartPoints = [];
+  const scale = 12;
+  for (let t = 0; t < Math.PI * 2; t += 0.05) {
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+    heartPoints.push({
+      x: canvas.width / 2 + x * scale,
+      y: canvas.height / 2 - y * scale,
+    });
+  }
+
+  while (particles.length < heartPoints.length) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      targetX: 0,
+      targetY: 0,
+      color: "pink"
+    });
+  }
+
+  for (let i = 0; i < heartPoints.length; i++) {
+    particles[i].targetX = heartPoints[i].x;
+    particles[i].targetY = heartPoints[i].y;
+  }
+}
+
+function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
 
   for (let p of particles) {
-    const dx = p.targetX - p.x;
-    const dy = p.targetY - p.y;
-    p.x += dx * 0.05;
-    p.y += dy * 0.05;
+    p.x += (p.targetX - p.x) * 0.1;
+    p.y += (p.targetY - p.y) * 0.1;
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  frame++;
-  if (frame < 200) {
-    requestAnimationFrame(animateParticles);
-  } else {
+  requestAnimationFrame(animate);
+}
+
+function showMessagesSequentially() {
+  if (currentMsgIndex < messages.length) {
+    createTextParticles(messages[currentMsgIndex]);
     currentMsgIndex++;
-    if (currentMsgIndex < messages.length) {
-      frame = 0;
-      createTextParticles(messages[currentMsgIndex]);
-      requestAnimationFrame(animateParticles);
-    }
+    setTimeout(showMessagesSequentially, delayBetweenTexts);
+  } else {
+    setTimeout(() => {
+      createHeartShape();
+    }, delayBetweenTexts);
   }
 }
 
-createTextParticles(messages[currentMsgIndex]);
-animateParticles();
+animate();
+showMessagesSequentially();
 setInterval(drawBackground, 33);
