@@ -3,21 +3,35 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const columns = Math.floor(canvas.width / 20);
-const drops = Array(columns).fill(1);
-const fontSize = 20;
-const matrixChars = "HAPPYBIRTHDAY1999278ALAA0123456789";
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const fontSize = 12;
+const columns = canvas.width / fontSize;
+const drops = Array(Math.floor(columns)).fill(1);
 
-function drawMatrixBackground() {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+const messages = [
+  "Happy Birthday",
+  "alaa",
+  "1999-27-8",
+  "Wishing you joy and love",
+  "26",
+  "<3"
+];
+
+let particles = [];
+let currentMsgIndex = 0;
+let frame = 0;
+
+function drawBackground() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#9b59b6"; // بنفسجي ناعم
+  ctx.fillStyle = "#b84eff"; // لون الخلفية المتحركة (بنفسجي)
   ctx.font = fontSize + "px monospace";
 
   for (let i = 0; i < drops.length; i++) {
-    const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+    const text = String.fromCharCode(0x30A0 + Math.random() * 96);
     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
     if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
       drops[i] = 0;
     }
@@ -25,113 +39,58 @@ function drawMatrixBackground() {
   }
 }
 
-class Particle {
-  constructor(x, y) {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
-    this.destX = x;
-    this.destY = y;
-    this.radius = 2;
-    this.speed = Math.random() * 5 + 1;
-  }
+function createTextParticles(text) {
+  particles = [];
+  ctx.font = "40px Arial";
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.fillText(text, centerX, centerY);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  update() {
-    const dx = this.destX - this.x;
-    const dy = this.destY - this.y;
-    this.x += dx * 0.05;
-    this.y += dy * 0.05;
-  }
-
-  draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#ff69b4"; // وردي
-    ctx.fill();
-  }
-}
-
-function getTextCoordinates(text) {
-  const offscreen = document.createElement("canvas");
-  const offCtx = offscreen.getContext("2d");
-  offscreen.width = canvas.width;
-  offscreen.height = canvas.height;
-  offCtx.font = "80px Arial";
-  offCtx.fillStyle = "white";
-  offCtx.textAlign = "center";
-  offCtx.textBaseline = "middle";
-  offCtx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-  const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
-  const coordinates = [];
-  for (let y = 0; y < imageData.height; y += 10) {
-    for (let x = 0; x < imageData.width; x += 10) {
-      const index = (y * imageData.width + x) * 4;
+  for (let y = 0; y < canvas.height; y += 6) {
+    for (let x = 0; x < canvas.width; x += 6) {
+      const index = (y * canvas.width + x) * 4;
       if (imageData.data[index + 3] > 128) {
-        coordinates.push({ x, y });
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          targetX: x,
+          targetY: y,
+          color: "pink" // لون النقاط اللي تكون النص
+        });
       }
     }
   }
-  return coordinates;
 }
 
-function drawParticles(text, callback) {
-  const coords = getTextCoordinates(text);
-  const particles = coords.map(c => new Particle(c.x, c.y));
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
 
-  let frame = 0;
-  function animateParticles() {
-    drawMatrixBackground();
-    particles.forEach(p => {
-      p.update();
-      p.draw();
-    });
-    frame++;
-    if (frame < 500) {
+  for (let p of particles) {
+    const dx = p.targetX - p.x;
+    const dy = p.targetY - p.y;
+    p.x += dx * 0.05;
+    p.y += dy * 0.05;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  frame++;
+  if (frame < 200) {
+    requestAnimationFrame(animateParticles);
+  } else {
+    currentMsgIndex++;
+    if (currentMsgIndex < messages.length) {
+      frame = 0;
+      createTextParticles(messages[currentMsgIndex]);
       requestAnimationFrame(animateParticles);
-    } else {
-      if (callback) callback();
     }
   }
-  animateParticles();
 }
 
-function drawHeartFromParticles(callback) {
-  const heartCoords = [];
-  const scale = 12;
-  for (let t = 0; t < Math.PI * 2; t += 0.05) {
-    const x = 16 * Math.pow(Math.sin(t), 3);
-    const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-    heartCoords.push({
-      x: canvas.width / 2 + x * scale,
-      y: canvas.height / 2 - y * scale,
-    });
-  }
-  const particles = heartCoords.map(c => new Particle(c.x, c.y));
-
-  let frame = 0;
-  function animateHeart() {
-    drawMatrixBackground();
-    particles.forEach(p => {
-      p.update();
-      p.draw();
-    });
-    frame++;
-    if (frame < 500) {
-      requestAnimationFrame(animateHeart);
-    } else {
-      drawParticles("Wishing you joy and love!", () => {});
-    }
-  }
-  animateHeart();
-}
-
-// تسلسل العرض
-drawParticles("Happy Birthday", () => {
-  drawParticles("alaa", () => {
-    drawParticles("1999-27-8", () => {
-      drawParticles("26 years old", () => {
-        drawHeartFromParticles();
-      });
-    });
-  });
-});
+createTextParticles(messages[currentMsgIndex]);
+animateParticles();
+setInterval(drawBackground, 33);
