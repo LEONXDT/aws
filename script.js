@@ -35,13 +35,12 @@
   </style>
 </head>
 <body>
-  <div id="background-text">I LOVE YOU • I LOVE YOU • I LOVE YOU • I LOVE YOU •</div>
+  <div id="background-text">I LOVE YOU • I LOVE YOU • I LOVE YOU •</div>
   <canvas id="canvas"></canvas>
 
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -59,16 +58,20 @@
     let messageDone = false;
 
     function createTextShape(text, fontSize = 100) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.font = `bold ${fontSize}px Arial`;
-      ctx.fillStyle = "white";
-      ctx.textAlign = "center";
-      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d");
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.font = `bold ${fontSize}px Arial`;
+      tempCtx.fillStyle = "white";
+      tempCtx.textAlign = "center";
+      tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
+      const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
       const shape = [];
-      for (let y = 0; y < canvas.height; y += 6) {
-        for (let x = 0; x < canvas.width; x += 6) {
-          const index = (y * canvas.width + x) * 4;
+      for (let y = 0; y < tempCanvas.height; y += 6) {
+        for (let x = 0; x < tempCanvas.width; x += 6) {
+          const index = (y * tempCanvas.width + x) * 4;
           if (imageData[index + 3] > 128) {
             shape.push({ x, y });
           }
@@ -87,7 +90,7 @@
         const posX = canvas.width / 2 + x * 15;
         const posY = canvas.height / 2 + y * 15;
         points.push({ x: posX, y: posY });
-        points.push({ x: posX + 2, y: posY + 2 }); // نقطتين بدل نقطة واحدة
+        points.push({ x: posX + 2, y: posY + 2 }); // نقطتين بدل واحدة
       }
       return points;
     }
@@ -104,7 +107,7 @@
         }
         ctx.beginPath();
         ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = "#ff69b4"; // لون وردي
+        ctx.fillStyle = "#ff69b4";
         ctx.fill();
       }
       if (showingHeart && messageDone) {
@@ -142,7 +145,7 @@
         particles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          target: null,
+          target: null
         });
       }
       particles = particles.slice(0, shape.length);
